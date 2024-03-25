@@ -1,0 +1,16 @@
+{
+	"github": {
+		"credentials": {
+			"app_id": "YOUR_APP_ID_INT",
+			"pem_dir": "/data/cert.pem",
+			"installation_id": "YOUR_INSTALLATION_ID_INT"
+		},
+		"entity": "orgs",
+		"place": "github"
+	},
+	"runner": {
+		"docker_img": { "compose_file": "/data/gha-baseimg-compose.yml" },
+		"min_pool": 3,
+		"max_runners": 5
+	}
+}

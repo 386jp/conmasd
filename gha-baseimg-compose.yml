@@ -1,0 +1,3 @@
+services:
+  conmasd-runner:
+    image: ghcr.io/actions/actions-runner:latest
