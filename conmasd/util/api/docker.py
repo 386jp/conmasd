@@ -57,7 +57,7 @@ class GHADockerRunnerAPI:
         return container.logs().find(b"Listening for Jobs") != -1 # type: ignore
 
     def _get_container_gets_job(self, container: DockerContainerModel) -> bool:
-        return container.logs().find(b"Received job status event. JobState: Busy") != -1 # type: ignore
+        return container.logs().find(b"Running job: ") != -1 # type: ignore
 
     def get_container_status(self, container: DockerContainerModel, old_status: Optional[RunnerStatusEnum] = None) -> RunnerStatusEnum:
         if container.status == 'exited': # type: ignore

@@ -1,6 +1,6 @@
 FROM python:3.11.8
 
-RUN pip install conmasd==0.1.1
+RUN pip install conmasd==0.1.2
 
 COPY ./docker-entrypoint.sh ./
 
