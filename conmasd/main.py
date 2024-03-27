@@ -25,6 +25,7 @@ class Conmasd:
         self.runner_base_img = ""
 
         self.runners: dict[str, ContainerInfo] = {}
+        self.status_cache: dict[str, int] = {}
 
         self._main_loop_while = True
 
@@ -137,8 +138,7 @@ class Conmasd:
     def _get_required_additional_runners(self) -> int:
         required_num_runners = self.config.runner.min_pool - self._get_in_queue_runners()
         if self.config.runner.max_runners is not None:
-            hoge = min(required_num_runners, self.config.runner.max_runners - self._get_active_runners())
-            return hoge
+            return min(required_num_runners, self.config.runner.max_runners - self._get_active_runners())
         return required_num_runners
 
     def _create_runner(self) -> None:
@@ -207,8 +207,18 @@ class Conmasd:
     def run(self) -> None:
         self._config_check()
         while self._main_loop_while:
-            self._update_containers_info()
-            required_additional_runners = self._get_required_additional_runners()
-            self.logger.info(f"[Runner info] Number of total runners: {len(self.runners)} Currently in-queue runners: {self._get_in_queue_runners()} Currently active runners (including in-queue runners): {self._get_active_runners()} Required additional runners: {required_additional_runners}")
-            [self._create_runner() for _ in range(required_additional_runners)]
+            try:
+                self._update_containers_info()
+                status = {
+                    "runners_total": len(self.runners),
+                    "runners_in_queue": self._get_in_queue_runners(),
+                    "runners_active": self._get_active_runners(),
+                    "runners_required": self._get_required_additional_runners()
+                }
+                if self.status_cache != status:
+                    self.logger.info(f"[Runner info] Number of total runners: {status['runners_total']} Currently in-queue runners: {status['runners_in_queue']} Currently active runners (including in-queue runners): {status['runners_active']} Required additional runners: {status['runners_required']}")
+                [self._create_runner() for _ in range(status['runners_required'])]
+                self.status_cache = status.copy()
+            except Exception as e:
+                self.logger.error(e)
             time.sleep(self.config.runner.polling_interval_sec)

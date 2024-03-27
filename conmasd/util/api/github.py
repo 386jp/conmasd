@@ -52,7 +52,9 @@ class GitHubAPI:
             "runner_group_id": int(runner_group_id),
             "labels": labels,
         }
-        return requests.post(url, headers=headers, json=data).json()
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        return response.json()
 
     def delete_runner(self, place_type: GHEntityEnum, place: str, runner_id: str):
         url = f"https://api.github.com/{place_type.value}/{place}/actions/runners/{runner_id}"
@@ -61,4 +63,6 @@ class GitHubAPI:
             "X-GitHub-Api-Version": "2022-11-28",
             **self._get_request_headers()
         }
-        return requests.delete(url, headers=headers)
+        response = requests.delete(url, headers=headers)
+        response.raise_for_status()
+        return response
