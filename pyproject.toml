@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "conmasd"
-version = "0.1.3"
+version = "0.1.4"
 description = "GitHub Action Self-hosted Runner Operator for Docker"
 authors = ["Kyosuke Miyamura <ask@386.jp>"]
 readme = "README.md"

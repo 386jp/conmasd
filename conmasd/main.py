@@ -35,7 +35,7 @@ class Conmasd:
             self.github_client.set_auth_token(credentials.token)
             self.logger.info("GitHub authentication by token is set")
         elif isinstance(credentials, GitHubAuthenticationByApp):
-            with open(credentials.pem_dir, 'rb') as f:
+            with open(credentials.pem_dir, 'r') as f:
                 pem = f.read()
             self.github_client.set_auth_app(
                 app_id=credentials.app_id,

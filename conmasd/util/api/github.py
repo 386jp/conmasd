@@ -28,26 +28,29 @@ class GitHubAPI:
         }
         return requests.post(url, headers=headers).json()
 
-    def set_auth_app(self, app_id: str, pem: bytes, installation_id: str) -> None:
-        data = self._get_app_auth_installed_access_token(installation_id, self._get_app_auth_jwt(app_id, pem))
-        self.access_token = data["token"]
+    def set_auth_app(self, app_id: str, pem: str, installation_id: str) -> None:
         self.app_auth_data = {
             "app_id": app_id,
             "pem": pem,
             "installation_id": installation_id,
-            "expires_at": data['expires_at']
         }
+        self._auth_app()
+
+    def _auth_app(self):
+        data = self._get_app_auth_installed_access_token(
+            self.app_auth_data['installation_id'],
+            self._get_app_auth_jwt(
+                self.app_auth_data['app_id'],
+                self.app_auth_data['pem'].encode()
+            )
+        )
+        self.access_token = data["token"]
+        self.app_auth_data["expires_at"] = data['expires_at']
 
     def _renew_auth(self):
         if self.app_auth_data:
-            if (datetime.datetime.fromisoformat(self.app_auth_data['expires_at']) - datetime.timedelta(minutes=5)) <= datetime.datetime.now(datetime.timezone.utc):
-                self.access_token = self._get_app_auth_installed_access_token(
-                    self.app_auth_data['installation_id'],
-                    self._get_app_auth_jwt(
-                        self.app_auth_data['app_id'],
-                        self.app_auth_data['pem']
-                    )
-                )
+            if (datetime.datetime.fromisoformat(self.app_auth_data['expires_at']) - datetime.timedelta(minutes=1)) <= datetime.datetime.now(datetime.timezone.utc):
+                self._auth_app()
 
     def set_auth_token(self, token: str) -> None:
         self.access_token = token
