@@ -19,18 +19,35 @@ class GitHubAPI:
         }
         return JWT().encode(payload, jwk_from_pem(pem), alg=algorithm)
 
-    def _get_app_auth_installed_access_token(self, installation_id: str) -> str:
+    def _get_app_auth_installed_access_token(self, installation_id: str, jwt: str) -> dict:
         url = f"https://api.github.com/app/installations/{installation_id}/access_tokens"
         headers = {
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
-            'Authorization': f'Bearer {self.app_auth_token}',
+            'Authorization': f'Bearer {jwt}',
         }
-        return requests.post(url, headers=headers).json()["token"]
+        return requests.post(url, headers=headers).json()
 
     def set_auth_app(self, app_id: str, pem: bytes, installation_id: str) -> None:
-        self.app_auth_token = self._get_app_auth_jwt(app_id, pem)
-        self.access_token = self._get_app_auth_installed_access_token(installation_id)
+        data = self._get_app_auth_installed_access_token(installation_id, self._get_app_auth_jwt(app_id, pem))
+        self.access_token = data["token"]
+        self.app_auth_data = {
+            "app_id": app_id,
+            "pem": pem,
+            "installation_id": installation_id,
+            "expires_at": data['expires_at']
+        }
+
+    def _renew_auth(self):
+        if self.app_auth_data:
+            if (datetime.datetime.fromisoformat(self.app_auth_data['expires_at']) - datetime.timedelta(minutes=5)) <= datetime.datetime.now(datetime.timezone.utc):
+                self.access_token = self._get_app_auth_installed_access_token(
+                    self.app_auth_data['installation_id'],
+                    self._get_app_auth_jwt(
+                        self.app_auth_data['app_id'],
+                        self.app_auth_data['pem']
+                    )
+                )
 
     def set_auth_token(self, token: str) -> None:
         self.access_token = token
@@ -41,6 +58,7 @@ class GitHubAPI:
         }
 
     def create_jit_runner(self, place_type: GHEntityEnum, place: str, runner_name: str, labels: list[str] = ["self-hosted"], runner_group_id: str = "1") -> dict:
+        self._renew_auth()
         url = f"https://api.github.com/{place_type.value}/{place}/actions/runners/generate-jitconfig"
         headers = {
             "Accept": "application/vnd.github+json",
@@ -57,6 +75,7 @@ class GitHubAPI:
         return response.json()
 
     def delete_runner(self, place_type: GHEntityEnum, place: str, runner_id: str):
+        self._renew_auth()
         url = f"https://api.github.com/{place_type.value}/{place}/actions/runners/{runner_id}"
         headers = {
             "Accept": "application/vnd.github+json",

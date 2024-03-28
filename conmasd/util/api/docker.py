@@ -69,7 +69,7 @@ class GHADockerRunnerAPI:
             # ログを全部見るのはだるいので、前回のrunner statusがRUNNING、かつ現在もcontainer statusがrunningだったら、既にrunnerがjobを捌いているはずなので、RUNNINGとする
             if old_status == RunnerStatusEnum.RUNNING:
                 return RunnerStatusEnum.RUNNING
-            if self._get_container_gets_job(container): # type: ignore
+            elif self._get_container_gets_job(container): # type: ignore
                 return RunnerStatusEnum.RUNNING
             elif self._get_container_ready_for_job(container): # type: ignore
                 return RunnerStatusEnum.IN_QUEUE

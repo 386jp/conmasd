@@ -13,7 +13,7 @@ from .types.conmasd_config.runner import DockerImageConfigByUrl, DockerImageConf
 
 from docker.models.resource import Model as DockerContainerModel
 
-from typing import Optional, Self
+from typing import Self
 
 class Conmasd:
     def __init__(self) -> None:
